@@ -62,10 +62,13 @@ def sendToDiscord(message):
     
 
 # Checking if the given information is correct
+print("[LOG] Sending a test HTTP request to the collaborator domain.")
 res = requests.post(f"https://{_settings['cdomain']}/bcollabtodiscord/test", json={"time":time.localtime()})
 if (res.status_code == 200):
     resContent = res.content.decode()
     res = requests.get(f"{_settings['polling-endpoint']}?biid={_settings['biid']}")
+    if (res.content.decode() == r"{}"):
+        print("[LOG] Cannot detect the test HTTP request, Burp Polling endpoint haven't detected the HTTP request. Please recheck your configuration.")
     if (res.status_code == 200):
         cResults = json.loads(res.content.decode())
         for cResponse in cResults['responses']:
@@ -78,13 +81,15 @@ if (res.status_code == 200):
             else:
                 message = json.dumps(cResponse)
             sendToDiscord(message=message)
+    print("[LOG] Sent the test Discord Messages.")
 
 # Main polling loop
+print(f"[LOG] Started listening")
 while (not shouldStop):
     try:
         res = requests.get(f"{_settings['polling-endpoint']}?biid={_settings['biid']}")
         if (res.content.decode() == r"{}"):
-            time.sleep(3)
+            time.sleep(_settings['poll-interval'])
             continue
         print(f"[LOG] Found {len(cResults['responses'])} Interactions.")
         if (res.status_code == 200):
@@ -99,7 +104,7 @@ while (not shouldStop):
                 else:
                     message = json.dumps(cResponse)
                 sendToDiscord(message=message)
-        time.sleep(3)
+        time.sleep(_settings['poll-interval'])
     except Exception as e:
         if ('KeyboardInterrupt' in str(e)):
             print("[LOG] Script Ended.")

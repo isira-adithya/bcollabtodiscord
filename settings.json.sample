@@ -2,5 +2,6 @@
     "biid":"<biid>",
     "cdomain":"<burp-collab-domain>",
     "polling-endpoint":"http://<burp-collab-polling-server-domain>/burpresults",
-    "dWebhook": "https://discord.com/api/webhooks/<id>/<randomstring>"
+    "dWebhook": "https://discord.com/api/webhooks/<id>/<randomstring>",
+    "poll-interval": 3 // In seconds
 }
