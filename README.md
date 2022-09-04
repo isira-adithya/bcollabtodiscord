@@ -26,5 +26,10 @@ Install it by running `pip install requests`.
 - Now copy the webhook URL and then paste the webhook URL inside the `dWebhook` key in `./settings.json`
 - Finally, your `./settings.json` should be completed and the script is ready to be executed. 
 
+## Executing
+You can execute the script by running `python3 main.py`.
+When running the script first time, you will receive a test HTTP request to the collaborator from the script.
+![](https://i.imgur.com/gUd3X6w.png)
+
 ## Templates
 You can customize your discord message templates by editing `txt` files under the `templates` folder.

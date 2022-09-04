@@ -1,7 +1,10 @@
-from email.mime import base
 import requests
 import json
 import base64
+import time
+
+# Variables
+shouldStop = False
 
 # Reading the settings.json file
 try:
@@ -53,13 +56,13 @@ def getSMTPMessageFromTemplate(cResponse):
 def sendToDiscord(message):
     data = {
         "content" : message,
-        "username" : "CustomUsername"
+        "username" : "bcollabtodiscord"
     }
     requests.post(_settings['dWebhook'], json=data)
     
 
 # Checking if the given information is correct
-res = requests.post(f"https://{_settings['cdomain']}/bcollabtodiscord")
+res = requests.post(f"https://{_settings['cdomain']}/bcollabtodiscord/test", json={"time":time.localtime()})
 if (res.status_code == 200):
     resContent = res.content.decode()
     res = requests.get(f"{_settings['polling-endpoint']}?biid={_settings['biid']}")
@@ -75,3 +78,31 @@ if (res.status_code == 200):
             else:
                 message = json.dumps(cResponse)
             sendToDiscord(message=message)
+
+# Main polling loop
+while (not shouldStop):
+    try:
+        res = requests.get(f"{_settings['polling-endpoint']}?biid={_settings['biid']}")
+        if (res.content.decode() == r"{}"):
+            time.sleep(3)
+            continue
+        print(f"[LOG] Found {len(cResults['responses'])} Interactions.")
+        if (res.status_code == 200):
+            cResults = json.loads(res.content.decode())
+            for cResponse in cResults['responses']:
+                if (cResponse['protocol'] == 'https' or cResponse['protocol'] == 'http'):
+                    message = getHTTPMessageFromTemplate(cResponse)
+                elif (cResponse['protocol'] == 'dns'):
+                    message = getDNSMessageFromTemplate(cResponse)
+                elif (cResponse['protocol'] == 'smtp'):
+                    message = getSMTPMessageFromTemplate(cResponse)
+                else:
+                    message = json.dumps(cResponse)
+                sendToDiscord(message=message)
+        time.sleep(3)
+    except Exception as e:
+        if ('KeyboardInterrupt' in str(e)):
+            print("[LOG] Script Ended.")
+        else:
+            print("[ERR] Something went wrong.")
+            print(e)
